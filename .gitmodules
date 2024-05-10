@@ -1,0 +1,3 @@
+[submodule "language_learning_client"]
+	path = language_learning_client
+	url = git@github.com:esanchezc/language_learning_client.git
