@@ -1,0 +1,8 @@
+node_modules/
+build/
+logs/
+coverage/
+.env
+.DS_Store
+*.tmp
+*.temp
