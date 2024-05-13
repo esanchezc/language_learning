@@ -19,7 +19,6 @@ app.get('/languages', async (req, res) => {
     const result = await pool.query('SELECT * FROM languages');
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
@@ -190,6 +189,4 @@ app.post('/words', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+module.exports = app;
