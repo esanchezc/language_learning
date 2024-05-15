@@ -70,7 +70,7 @@ app.get('/words', async (req, res) => {
 });
 
 // Get a word by id
-app.get('/words/:id', async (req, res) => {
+app.get('/words/:id(\\d+)', async (req, res) => {
   const id = req.params.id;
   try {
     const result = await pool.query('SELECT * FROM words WHERE id = $1', [id]);
@@ -78,6 +78,32 @@ app.get('/words/:id', async (req, res) => {
       res.status(404).json({ message: 'Word not found' });
     } else {
       res.json(result.rows[0]);
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Get all words that have translations in a given language
+app.get('/words/:languageCode', async (req, res) => {
+  const languageCode = req.params.languageCode;
+  if (!/^[a-z]{2}$/.test(languageCode)) { // Assuming language codes are 2-letter lowercase strings
+    res.status(400).json({ message: 'Invalid language code' });
+    return;
+  }
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT w.* FROM words w 
+       JOIN translations t ON w.id = t.word_id 
+       JOIN languages l ON t.language_id = l.id 
+       WHERE l.code = $1`,
+      [languageCode]
+    );
+    if (result.rows.length === 0) {
+      res.status(404).json({ message: 'No words found with translations in this language' });
+    } else {
+      res.json(result.rows);
     }
   } catch (err) {
     console.error(err);
@@ -194,6 +220,7 @@ app.post('/words', async (req, res) => {
     }
   }
 });
+
 // Get a translation by id
 app.get('/translations/:id', async (req, res) => {
   const id = req.params.id;

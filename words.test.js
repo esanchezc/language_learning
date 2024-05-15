@@ -23,8 +23,8 @@ beforeAll(() => {
     server.listen(3001); // Start the server
 });
 
-afterAll(() => {
-    server.close(); // Close the server after all tests are done
+afterAll(async () => {
+    await server.close();
 });
 
 describe('GET /words', () => {
@@ -40,6 +40,44 @@ describe('GET /words', () => {
         const response = await request(app).get('/words');
         expect(response.status).toBe(200);
         expect(response.body).toEqual(rows);
+    });
+});
+
+describe('GET /words/:languageCode', () => {
+    afterEach(() => {
+        pool.query.mockReset();
+    });
+
+    it('returns 200 with words that have translations in the given language', async () => {
+        const languageCode = 'es';
+        const words = [
+            { id: 1, word: 'word1' },
+            { id: 2, word: 'word2' },
+        ];
+        pool.query.mockResolvedValue({ rows: words });
+        const response = await request(server).get(`/words/${languageCode}`);
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(words);
+    });
+
+    it('returns 404 when no words have translations in the given language', async () => {
+        const languageCode = 'es';
+        pool.query.mockResolvedValue({ rows: [] });
+        const response = await request(server).get(`/words/${languageCode}`);
+        expect(response.status).toBe(404);
+    });
+
+    it('returns 500 when an internal server error occurs', async () => {
+        const languageCode = 'es';
+        pool.query.mockRejectedValue(new Error('Internal Server Error'));
+        const response = await request(server).get(`/words/${languageCode}`);
+        expect(response.status).toBe(500);
+    });
+
+    it('returns 400 when the language code is invalid', async () => {
+        const languageCode = ' invalid-code ';
+        const response = await request(server).get(`/words/${languageCode}`);
+        expect(response.status).toBe(400);
     });
 });
 
