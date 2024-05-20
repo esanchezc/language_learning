@@ -48,10 +48,6 @@ describe('GET /languages', () => {
 });
 
 describe('GET /languages/:id', () => {
-    beforeEach(() => {
-        server = http.createServer(app);
-    });
-
     it('should return a language when the id exists', async () => {
         pool.query.mockResolvedValueOnce({ rows: [{ id: 1, name: 'English' }] });
         const response = await request(server).get('/languages/1');
