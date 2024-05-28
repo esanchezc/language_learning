@@ -30,7 +30,5 @@ jobs:
       - name: Run end-to-end tests
         run: |
           docker network create my-network
-          docker-compose up -d
-          docker run --network my-network -v $PWD/language_learning_client:/app -w /app cypress/included:13.9.0
-          docker-compose down
+          docker run --network host -v $PWD/language_learning_client:/app -w /app cypress/included:13.9.0
           docker network rm my-network
