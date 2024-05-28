@@ -30,5 +30,5 @@ jobs:
       - name: Run end-to-end tests
         run: |
           docker-compose up -d
-          docker-compose exec -T react-app npx cypress run
+          docker run -it -v $PWD:/e2e -w /e2e cypress/included:13.9.0
           docker-compose down
