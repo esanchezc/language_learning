@@ -6,6 +6,8 @@ services:
       - "3000:3000"
     depends_on:
       - node-app
+    environment:
+      - CI=true
   node-app:
     build: .
     ports:
