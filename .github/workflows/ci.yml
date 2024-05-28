@@ -30,5 +30,5 @@ jobs:
       - name: Run end-to-end tests
         run: |
           docker-compose up -d
-          docker run -v $PWD/cypress:/e2e -w /e2e cypress/included:13.9.0
+          docker run -v $PWD:/app -w /app cypress/included:13.9.0 run --project /app
           docker-compose down
