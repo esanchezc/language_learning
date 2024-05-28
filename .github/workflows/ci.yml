@@ -30,5 +30,5 @@ jobs:
       - name: Run end-to-end tests
         run: |
           docker-compose up -d
-          docker run -v $PWD:/e2e -w /e2e cypress/included:13.9.0 --config-file cypress.config.js
+          docker run -v $PWD/language_learning_client:/app -w /app cypress/included:13.9.0
           docker-compose down
