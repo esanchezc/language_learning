@@ -27,6 +27,16 @@ jobs:
           docker-compose build
           docker-compose push
 
+      - name: List installed packages
+        run: |
+          npm ls
+          cd language_learning_client
+      
+      - name: Verify Cypress installation
+        run: |
+          cd language_learning_client
+          npx cypress verify
+
       - name: Run end-to-end tests
         run: |
           docker-compose up -d
