@@ -6,9 +6,19 @@ services:
       - "3000:3000"
     depends_on:
       - node-app
-    environment:
-      - CI=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
   node-app:
     build: .
     ports:
       - "5000:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
