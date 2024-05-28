@@ -30,7 +30,7 @@ jobs:
       - name: Run end-to-end tests
         run: |
           docker-compose up -d
-          docker run --network host -v $PWD/language_learning_client:/app -w /app cypress/included:13.9.0
+          docker run --network host -v $PWD/language_learning_client:/app -v $PWD/cypress/screenshots:/app/cypress/screenshots -w /app cypress/included:13.9.0
           docker-compose down
 
       - name: Upload screenshots as artifacts
@@ -38,4 +38,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: cypress-screenshots
-          path: /app/cypress/screenshots
+          path: cypress/screenshots
