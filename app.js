@@ -3,11 +3,11 @@ const { Pool } = require('pg');
 const app = express();
 const port = 3001;
 
-const pool = new Pool({
-  user: 'postgres',
-  host: '127.0.0.1',
-  database: 'language_learning',
-  password: 'postgres',
+const db = new Pool({
+  user: process.env.POSTGRES_USER,
+  host: 'db',
+  database: process.env.POSTGRES_DB,
+  password: process.env.POSTGRES_PASSWORD,
   port: 5432,
 });
 
@@ -16,7 +16,7 @@ app.use(express.json());
 // Get all languages
 app.get('/languages', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM languages');
+    const result = await db.query('SELECT * FROM languages');
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ message: 'Internal Server Error' });
@@ -38,7 +38,7 @@ app.get('/languages/:id', async (req, res) => {
   }
 
   try {
-    const result = await pool.query('SELECT * FROM languages WHERE id = $1', [id]);
+    const result = await db.query('SELECT * FROM languages WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Language not found' });
@@ -61,7 +61,7 @@ app.get('/languages/:id', async (req, res) => {
 // Get all words
 app.get('/words', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM words');
+    const result = await db.query('SELECT * FROM words');
     res.json(result.rows);
   } catch (err) {
     console.error(err);
@@ -73,7 +73,7 @@ app.get('/words', async (req, res) => {
 app.get('/words/:id(\\d+)', async (req, res) => {
   const id = req.params.id;
   try {
-    const result = await pool.query('SELECT * FROM words WHERE id = $1', [id]);
+    const result = await db.query('SELECT * FROM words WHERE id = $1', [id]);
     if (result.rows.length === 0) {
       res.status(404).json({ message: 'Word not found' });
     } else {
@@ -93,7 +93,7 @@ app.get('/words/:languageCode', async (req, res) => {
     return;
   }
   try {
-    const result = await pool.query(
+    const result = await db.query(
       `SELECT DISTINCT w.* FROM words w 
        JOIN translations t ON w.id = t.word_id 
        JOIN languages l ON t.language_id = l.id 
@@ -118,7 +118,7 @@ app.get('/words/:wordId/translations', async (req, res) => {
     return res.status(404).json({ message: 'Word not found' });
   }
   try {
-    const result = await pool.query(
+    const result = await db.query(
       'SELECT t.id, t.translation, l.name as language_name FROM translations t JOIN languages l ON t.language_id = l.id WHERE t.word_id = $1',
       [wordId]
     );
@@ -133,7 +133,7 @@ app.get('/words/:wordId/translations/:languageCode', async (req, res) => {
   const wordId = req.params.wordId;
   const languageCode = req.params.languageCode;
   try {
-    const result = await pool.query(
+    const result = await db.query(
       'SELECT t.id, t.translation FROM translations t JOIN languages l ON t.language_id = l.id WHERE t.word_id = $1 AND l.code = $2',
       [wordId, languageCode]
     );
@@ -158,7 +158,7 @@ function validateRequestBody(body) {
 
 // Check if the word exists in the database
 async function getWordId(word) {
-  const result = await pool.query('SELECT * FROM words WHERE word = $1', [word]);
+  const result = await db.query('SELECT * FROM words WHERE word = $1', [word]);
   return result.rows.length > 0 ? result.rows[0].id : null;
 }
 
@@ -168,31 +168,31 @@ async function createOrUpdateWord(word) {
   if (existingWordId) {
     return existingWordId;
   } else {
-    const result = await pool.query('INSERT INTO words (word) VALUES ($1) RETURNING id', [word]);
+    const result = await db.query('INSERT INTO words (word) VALUES ($1) RETURNING id', [word]);
     return result.rows[0].id;
   }
 }
 
 // Create or update a translation for a word
 async function createOrUpdateTranslation(wordId, languageCode, translatedWord) {
-  const languageResult = await pool.query('SELECT id FROM languages WHERE code = $1', [languageCode]);
+  const languageResult = await db.query('SELECT id FROM languages WHERE code = $1', [languageCode]);
   if (languageResult.rows.length === 0) {
     throw new Error('Language not found');
   }
   const languageId = languageResult.rows[0].id;
 
-  const existingTranslationResult = await pool.query(
+  const existingTranslationResult = await db.query(
     'SELECT * FROM translations WHERE word_id = $1 AND language_id = $2',
     [wordId, languageId]
   );
 
   if (existingTranslationResult.rows.length > 0) {
-    await pool.query(
+    await db.query(
       'UPDATE translations SET translation = $1 WHERE word_id = $2 AND language_id = $3',
       [translatedWord, wordId, languageId]
     );
   } else {
-    await pool.query(
+    await db.query(
       'INSERT INTO translations (word_id, language_id, translation) VALUES ($1, $2, $3)',
       [wordId, languageId, translatedWord]
     );
@@ -225,7 +225,7 @@ app.post('/words', async (req, res) => {
 app.get('/translations/:id', async (req, res) => {
   const id = req.params.id;
   try {
-    const result = await pool.query(
+    const result = await db.query(
       'SELECT t.id, t.translation, l.name as language_name, w.word FROM translations t JOIN languages l ON t.language_id = l.id JOIN words w ON t.word_id = w.id WHERE t.id = $1',
       [id]
     );
