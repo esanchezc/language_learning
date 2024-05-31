@@ -1,7 +1,7 @@
 const express = require('express');
 const { Pool } = require('pg');
+
 const app = express();
-const port = 3001;
 
 const db = new Pool({
   user: process.env.POSTGRES_USER,
@@ -13,7 +13,17 @@ const db = new Pool({
 
 app.use(express.json());
 
-// Get all languages
+/**
+ * @swagger
+ * /languages:
+ *   get:
+ *     description: Get all languages
+ *     responses:
+ *       200:
+ *         description: Success
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/languages', async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM languages');
@@ -23,7 +33,35 @@ app.get('/languages', async (req, res) => {
   }
 });
 
-// Get a language by id
+/**
+ * @swagger
+ * /languages/{id}:
+ *   get:
+ *     description: Get a language by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The id of the language
+ *     responses:
+ *       200:
+ *         description: Success
+ *         schema:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *             name:
+ *               type: string
+ *       400:
+ *         description: Bad Request
+ *       404:
+ *         description: Language not found
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/languages/:id', async (req, res) => {
   const id = req.params.id;
 
@@ -58,7 +96,26 @@ app.get('/languages/:id', async (req, res) => {
   }
 });
 
-// Get all words
+/**
+ * @swagger
+ * /words:
+ *   get:
+ *     description: Get all words
+ *     responses:
+ *       200:
+ *         description: Success
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/words', async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM words');
@@ -69,7 +126,33 @@ app.get('/words', async (req, res) => {
   }
 });
 
-// Get a word by id
+/**
+ * @swagger
+ * /words/{id}:
+ *   get:
+ *     description: Get a word by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The id of the word
+ *     responses:
+ *       200:
+ *         description: Success
+ *         schema:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *             name:
+ *               type: string
+ *       404:
+ *         description: Word not found
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/words/:id(\\d+)', async (req, res) => {
   const id = req.params.id;
   try {
@@ -85,7 +168,37 @@ app.get('/words/:id(\\d+)', async (req, res) => {
   }
 });
 
-// Get all words that have translations in a given language
+/**
+ * @swagger
+ * /words/{languageCode}:
+ *   get:
+ *     description: Get words with translations in a specific language
+ *     parameters:
+ *       - in: path
+ *         name: languageCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The code of the language
+ *     responses:
+ *       200:
+ *         description: Success
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               name:
+ *                 type: string
+ *       400:
+ *         description: Invalid language code
+ *       404:
+ *         description: No words found with translations in this language
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/words/:languageCode', async (req, res) => {
   const languageCode = req.params.languageCode;
   if (!/^[a-z]{2}$/.test(languageCode)) { // Assuming language codes are 2-letter lowercase strings
@@ -111,7 +224,37 @@ app.get('/words/:languageCode', async (req, res) => {
   }
 });
 
-// Get all translations for a word
+/**
+ * @swagger
+ * /words/{wordId}/translations:
+ *   get:
+ *     description: Get translations of a word
+ *     parameters:
+ *       - in: path
+ *         name: wordId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The id of the word
+ *     responses:
+ *       200:
+ *         description: Success
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               translation:
+ *                 type: string
+ *               language_name:
+ *                 type: string
+ *       404:
+ *         description: Word not found
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/words/:wordId/translations', async (req, res) => {
   const wordId = req.params.wordId;
   if (!Number.isInteger(parseInt(wordId))) {
@@ -129,6 +272,37 @@ app.get('/words/:wordId/translations', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /words/{wordId}/translations/{languageCode}:
+ *   get:
+ *     description: Get a translation of a word in a specific language
+ *     parameters:
+ *       - in: path
+ *         name: wordId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The id of the word
+ *       - in: path
+ *         name: languageCode
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The code of the language
+ *     responses:
+ *       200:
+ *         description: Success
+ *         schema:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *             translation:
+ *               type: string
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/words/:wordId/translations/:languageCode', async (req, res) => {
   const wordId = req.params.wordId;
   const languageCode = req.params.languageCode;
@@ -199,7 +373,37 @@ async function createOrUpdateTranslation(wordId, languageCode, translatedWord) {
   }
 }
 
-// Main method
+/**
+ * @swagger
+ * /words:
+ *   post:
+ *     description: Create or update a word and its translations
+ *     requestBody:
+ *       required: true
+ *       schema:
+ *         type: object
+ *         properties:
+ *           word:
+ *             type: string
+ *           translations:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 languageCode:
+ *                   type: string
+ *                 translation:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Word created or updated successfully
+ *       400:
+ *         description: Invalid request body
+ *       404:
+ *         description: Language not found
+ *       500:
+ *         description: Internal Server Error
+ */
 app.post('/words', async (req, res) => {
   try {
     validateRequestBody(req.body);
@@ -221,7 +425,37 @@ app.post('/words', async (req, res) => {
   }
 });
 
-// Get a translation by id
+/**
+ * @swagger
+ * /translations/{id}:
+ *   get:
+ *     description: Get a translation by id
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The id of the translation
+ *     responses:
+ *       200:
+ *         description: Success
+ *         schema:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *             translation:
+ *               type: string
+ *             language_name:
+ *               type: string
+ *             word:
+ *               type: string
+ *       404:
+ *         description: Translation not found
+ *       500:
+ *         description: Internal Server Error
+ */
 app.get('/translations/:id', async (req, res) => {
   const id = req.params.id;
   try {

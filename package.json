@@ -9,9 +9,12 @@
   "author": "Emanuel Sanchez",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.19.2",
     "font-awesome": "^4.7.0",
-    "pg": "^8.11.5"
+    "pg": "^8.11.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.24.5",
