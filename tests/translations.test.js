@@ -1,5 +1,3 @@
-import { mock } from 'jest-mock-extended';
-
 const pg = require('pg');
 const { Pool } = pg;
 
@@ -10,7 +8,7 @@ jest.mock('pg', () => {
     return { Pool: jest.fn(() => mPool) };
 });
 
-const app = require('./app');
+const app = require('../src/app');
 const http = require('http');
 const request = require('supertest');
 

@@ -6,7 +6,7 @@ jest.mock('pg', () => {
 });
 
 const request = require('supertest');
-const app = require('./app');
+const app = require('../src/app');
 const http = require('http');
 const { Pool } = require('pg');
 
