@@ -1,4 +1,4 @@
-const app = require('./app');
+const app = require('./src/app');
 const port = 3001;
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger');
